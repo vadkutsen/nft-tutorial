@@ -72,19 +72,9 @@ impl NonFungibleTokenCore for Contract {
         approval_id: u64,
         memo: Option<String>,
     ) {
-        assert_one_yocto();
-        let sender_id = env::predecessor_account_id();
-        let previous_token = self.internal_transfer(
-            &sender_id,
-            receiver_id.as_ref(),
-            &token_id,
-            Some(approval_id),
-            memo,
-        );
-        refund_approved_account_ids(
-            previous_token.owner_id.clone(),
-            &previous_token.approved_account_ids,
-        );
+        /*
+            FILL THIS IN
+        */
     }
 
     #[payable]
@@ -96,49 +86,15 @@ impl NonFungibleTokenCore for Contract {
         memo: Option<String>,
         msg: String,
     ) -> Promise {
-        assert_one_yocto();
-        let sender_id = env::predecessor_account_id();
-        let previous_token = self.internal_transfer(
-            &sender_id,
-            receiver_id.as_ref(),
-            &token_id,
-            Some(approval_id),
-            memo,
-        );
-        // Initiating receiver's call and the callback
-        ext_non_fungible_token_receiver::nft_on_transfer(
-            sender_id,
-            previous_token.owner_id.clone(),
-            token_id.clone(),
-            msg,
-            receiver_id.as_ref(),
-            NO_DEPOSIT,
-            env::prepaid_gas() - GAS_FOR_NFT_TRANSFER_CALL,
-        )
-        .then(ext_self::nft_resolve_transfer(
-            previous_token.owner_id,
-            receiver_id.into(),
-            token_id,
-            previous_token.approved_account_ids,
-            &env::current_account_id(),
-            NO_DEPOSIT,
-            GAS_FOR_RESOLVE_TRANSFER,
-        ))
+        /*
+            FILL THIS IN
+        */
     }
 
     fn nft_token(&self, token_id: TokenId) -> Option<JsonToken> {
-        if let Some(token) = self.tokens_by_id.get(&token_id) {
-            let metadata = self.token_metadata_by_id.get(&token_id).unwrap();
-            Some(JsonToken {
-                token_id,
-                owner_id: token.owner_id,
-                metadata,
-                royalty: token.royalty,
-                approved_account_ids: token.approved_account_ids,
-            })
-        } else {
-            None
-        }
+        /*
+            FILL THIS IN
+        */
     }
 }
 
@@ -152,40 +108,8 @@ impl NonFungibleTokenResolver for Contract {
         token_id: TokenId,
         approved_account_ids: HashMap<AccountId, u64>,
     ) -> bool {
-        // Whether receiver wants to return token back to the sender, based on `nft_on_transfer`
-        // call result.
-        if let PromiseResult::Successful(value) = env::promise_result(0) {
-            if let Ok(return_token) = near_sdk::serde_json::from_slice::<bool>(&value) {
-                if !return_token {
-                    // Token was successfully received.
-                    refund_approved_account_ids(owner_id, &approved_account_ids);
-                    return true;
-                }
-            }
-        }
-
-        let mut token = if let Some(token) = self.tokens_by_id.get(&token_id) {
-            if token.owner_id != receiver_id {
-                // The token is not owner by the receiver anymore. Can't return it.
-                refund_approved_account_ids(owner_id, &approved_account_ids);
-                return true;
-            }
-            token
-        } else {
-            // The token was burned and doesn't exist anymore.
-            refund_approved_account_ids(owner_id, &approved_account_ids);
-            return true;
-        };
-
-        log!("Return {} from @{} to @{}", token_id, receiver_id, owner_id);
-
-        self.internal_remove_token_from_owner(&receiver_id, &token_id);
-        self.internal_add_token_to_owner(&owner_id, &token_id);
-        token.owner_id = owner_id;
-        refund_approved_account_ids(receiver_id, &token.approved_account_ids);
-        token.approved_account_ids = approved_account_ids;
-        self.tokens_by_id.insert(&token_id, &token);
-
-        false
+        /*
+            FILL THIS IN
+        */
     }
 }
