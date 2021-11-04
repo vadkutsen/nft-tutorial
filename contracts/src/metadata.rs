@@ -34,12 +34,12 @@ pub struct JsonToken {
 }
 
 pub trait NonFungibleTokenMetadata {
-    fn nft_metadata(&self) -> NFTMetadata;
+    fn nft_metadata(&self);
 }
 
 #[near_bindgen]
 impl NonFungibleTokenMetadata for Contract {
-    fn nft_metadata(&self) -> NFTMetadata {
+    fn nft_metadata(&self) {
         /*
             FILL THIS IN
         */

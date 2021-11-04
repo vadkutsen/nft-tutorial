@@ -23,9 +23,9 @@ pub trait NonFungibleTokenCore {
         approval_id: u64,
         memo: Option<String>,
         msg: String,
-    ) -> Promise;
+    );
 
-    fn nft_token(&self, token_id: TokenId) -> Option<JsonToken>;
+    fn nft_token(&self, token_id: TokenId);
 }
 
 #[ext_contract(ext_non_fungible_token_receiver)]
@@ -37,7 +37,7 @@ trait NonFungibleTokenReceiver {
         previous_owner_id: AccountId,
         token_id: TokenId,
         msg: String,
-    ) -> Promise;
+    );
 }
 
 #[ext_contract(ext_self)]
@@ -48,7 +48,7 @@ trait NonFungibleTokenResolver {
         receiver_id: AccountId,
         token_id: TokenId,
         approved_account_ids: HashMap<AccountId, u64>,
-    ) -> bool;
+    );
 }
 
 trait NonFungibleTokenResolver {
@@ -58,7 +58,7 @@ trait NonFungibleTokenResolver {
         receiver_id: AccountId,
         token_id: TokenId,
         approved_account_ids: HashMap<AccountId, u64>,
-    ) -> bool;
+    );
 }
 
 #[near_bindgen]
@@ -85,13 +85,13 @@ impl NonFungibleTokenCore for Contract {
         approval_id: u64,
         memo: Option<String>,
         msg: String,
-    ) -> Promise {
+    ) {
         /*
             FILL THIS IN
         */
     }
 
-    fn nft_token(&self, token_id: TokenId) -> Option<JsonToken> {
+    fn nft_token(&self, token_id: TokenId) {
         /*
             FILL THIS IN
         */
@@ -107,7 +107,7 @@ impl NonFungibleTokenResolver for Contract {
         receiver_id: AccountId,
         token_id: TokenId,
         approved_account_ids: HashMap<AccountId, u64>,
-    ) -> bool {
+    ) {
         /*
             FILL THIS IN
         */

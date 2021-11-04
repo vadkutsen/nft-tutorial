@@ -7,7 +7,6 @@ use near_sdk::{
     env, near_bindgen, AccountId, Balance, CryptoHash, PanicOnDefault, Promise, StorageUsage,
 };
 
-use crate::internal::*;
 pub use crate::metadata::*;
 pub use crate::mint::*;
 pub use crate::nft_core::*;
@@ -16,7 +15,6 @@ pub use crate::royalty::*;
 
 mod approval; 
 mod enumeration; 
-mod internal; 
 mod metadata; 
 mod mint; 
 mod nft_core; 
@@ -52,7 +50,7 @@ pub enum StorageKey {
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata) -> Self {
+    pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata) {
         /*
             FILL THIS IN
         */

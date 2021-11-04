@@ -13,7 +13,7 @@ pub trait NonFungibleTokenCore {
         token_id: TokenId,
         approved_account_id: AccountId,
         approval_id: Option<u64>,
-    ) -> bool;
+    );
 
     fn nft_revoke(&mut self, token_id: TokenId, account_id: ValidAccountId);
 
@@ -46,7 +46,7 @@ impl NonFungibleTokenCore for Contract {
         token_id: TokenId,
         approved_account_id: AccountId,
         approval_id: Option<u64>,
-    ) -> bool {
+    ) {
         /*
             FILL THIS IN
         */
