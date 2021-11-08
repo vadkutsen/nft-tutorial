@@ -62,4 +62,10 @@ impl Contract {
             FILL THIS IN
         */
     }
+
+    fn measure_min_token_storage_cost(&mut self) {
+        /*
+            FILL THIS IN
+        */
+    }
 }
