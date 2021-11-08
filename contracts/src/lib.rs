@@ -50,7 +50,7 @@ pub enum StorageKey {
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new_default_meta(owner_id: ValidAccountId) -> Self {
+    pub fn new_default_meta(owner_id: ValidAccountId) {
         /*
             FILL THIS IN
         */
