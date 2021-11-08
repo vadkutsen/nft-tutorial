@@ -50,6 +50,13 @@ pub enum StorageKey {
 #[near_bindgen]
 impl Contract {
     #[init]
+    pub fn new_default_meta(owner_id: ValidAccountId) -> Self {
+        /*
+            FILL THIS IN
+        */
+    }
+
+    #[init]
     pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata) {
         /*
             FILL THIS IN
