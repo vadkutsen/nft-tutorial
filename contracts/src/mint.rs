@@ -7,7 +7,6 @@ impl Contract {
         &mut self,
         token_id: Option<TokenId>,
         metadata: TokenMetadata,
-        perpetual_royalties: Option<HashMap<AccountId, u32>>,
         receiver_id: Option<ValidAccountId>,
     ) {
         /*

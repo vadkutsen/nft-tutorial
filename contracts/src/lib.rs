@@ -34,7 +34,7 @@ pub struct Contract {
     */
 }
 
-/// Helper structure to for keys of the persistent collections.
+/// Helper structure for keys of the persistent collections.
 #[derive(BorshSerialize)]
 pub enum StorageKey {
     TokensPerOwner,
@@ -49,6 +49,11 @@ pub enum StorageKey {
 
 #[near_bindgen]
 impl Contract {
+    /*
+        initialization function (can only be called once).
+        this initializes the contract with default metadata so the
+        user doesn't have to manually type metadata.
+    */
     #[init]
     pub fn new_default_meta(owner_id: ValidAccountId) {
         /*
@@ -56,14 +61,13 @@ impl Contract {
         */
     }
 
+    /*
+        initialization function (can only be called once).
+        this initializes the contract with metadata that was passed in and
+        the owner_id. 
+    */
     #[init]
     pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata) {
-        /*
-            FILL THIS IN
-        */
-    }
-
-    fn measure_min_token_storage_cost(&mut self) {
         /*
             FILL THIS IN
         */
