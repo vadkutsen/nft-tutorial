@@ -42,15 +42,12 @@ pub struct Contract {
 
     //keeps track of the token metadata for a given token ID
     pub token_metadata_by_id: UnorderedMap<TokenId, TokenMetadata>,
-
-    /// The storage size in bytes for one account.
-    pub extra_storage_in_bytes_per_token: StorageUsage,
     
     //keeps track of the metadata for the contract
     pub metadata: LazyOption<NFTMetadata>,
 }
 
-/// Helper structure to for keys of the persistent collections.
+/// Helper structure for keys of the persistent collections.
 #[derive(BorshSerialize)]
 pub enum StorageKey {
     TokensPerOwner,
@@ -65,8 +62,14 @@ pub enum StorageKey {
 
 #[near_bindgen]
 impl Contract {
+    /*
+        initialization function (can only be called once).
+        this initializes the contract with default metadata so the
+        user doesn't have to manually type metadata.
+    */
     #[init]
     pub fn new_default_meta(owner_id: ValidAccountId) -> Self {
+        //calls the other function "new: with some default metadata and the owner_id passed in 
         Self::new(
             owner_id,
             NFTMetadata {
@@ -81,43 +84,30 @@ impl Contract {
         )
     }
 
+    /*
+        initialization function (can only be called once).
+        this initializes the contract with metadata that was passed in and
+        the owner_id. 
+    */
     #[init]
     pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata) -> Self {
+        //create a variable of type Self with all the fields initialized. 
         let this = Self {
+            //Storage keys are simply the prefixes used for the collections. This helps avoid data collision
             tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
             tokens_by_id: LookupMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
             token_metadata_by_id: UnorderedMap::new(
                 StorageKey::TokenMetadataById.try_to_vec().unwrap(),
             ),
-            owner_id: owner_id.into(),
-            extra_storage_in_bytes_per_token: 0,
+            //set the owner_id field equal to the passed in owner_id. 
+            owner_id: owner_id.into(), //.into() converts from a ValidAccountId to an AccountId
             metadata: LazyOption::new(
                 StorageKey::NftMetadata.try_to_vec().unwrap(),
                 Some(&metadata),
             ),
         };
 
+        //return the Contract object
         this
-    }
-
-    fn measure_min_token_storage_cost(&mut self) {
-        let initial_storage_usage = env::storage_usage();
-        let tmp_account_id = "a".repeat(64);
-        let u = UnorderedSet::new(
-            StorageKey::TokenPerOwnerInner {
-                account_id_hash: hash_account_id(&tmp_account_id),
-            }
-            .try_to_vec()
-            .unwrap(),
-        );
-        self.tokens_per_owner.insert(&tmp_account_id, &u);
-
-        let tokens_per_owner_entry_in_bytes = env::storage_usage() - initial_storage_usage;
-        let owner_id_extra_cost_in_bytes = (tmp_account_id.len() - self.owner_id.len()) as u64;
-
-        self.extra_storage_in_bytes_per_token =
-            tokens_per_owner_entry_in_bytes + owner_id_extra_cost_in_bytes;
-
-        self.tokens_per_owner.remove(&tmp_account_id);
     }
 }
