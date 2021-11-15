@@ -12,6 +12,8 @@ pub trait NonFungibleTokenCore {
         &mut self,
         receiver_id: ValidAccountId,
         token_id: TokenId,
+        //we introduce an approval ID so that people with that approval ID can transfer the token
+        approval_id: u64,
         memo: Option<String>,
     );
 
@@ -21,6 +23,8 @@ pub trait NonFungibleTokenCore {
         &mut self,
         receiver_id: ValidAccountId,
         token_id: TokenId,
+        //we introduce an approval ID so that people with that approval ID can transfer the token
+        approval_id: u64,
         memo: Option<String>,
         msg: String,
     ) -> Promise;
@@ -54,6 +58,8 @@ trait NonFungibleTokenResolver {
         owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
+        //we introduce the approval map so we can keep track of what the approvals were before the transfer
+        approved_account_ids: HashMap<AccountId, u64>,
     ) -> bool;
 }
 
@@ -64,6 +70,8 @@ trait NonFungibleTokenResolver {
         owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
+        //we introduce the approval map so we can keep track of what the approvals were before the transfer
+        approved_account_ids: HashMap<AccountId, u64>,
     ) -> bool;
 }
 
@@ -76,6 +84,8 @@ impl NonFungibleTokenCore for Contract {
         &mut self,
         receiver_id: ValidAccountId,
         token_id: TokenId,
+        //we introduce an approval ID so that people with that approval ID can transfer the token
+        approval_id: u64,
         memo: Option<String>,
     ) {
         //assert that the user attached exactly 1 yoctoNEAR. This is for security and so that the user will be redirected to the NEAR wallet. 
@@ -83,12 +93,19 @@ impl NonFungibleTokenCore for Contract {
         //get the sender to transfer the token from the sender to the receiver
         let sender_id = env::predecessor_account_id();
 
-        //call the internal transfer method
-        self.internal_transfer(
+        //call the internal transfer method and get back the previous token so we can refund the approved account IDs
+        let previous_token = self.internal_transfer(
             &sender_id,
             receiver_id.as_ref(),
             &token_id,
+            Some(approval_id),
             memo,
+        );
+
+        //we refund the owner for releasing the storage used up by the approved account IDs
+        refund_approved_account_ids(
+            previous_token.owner_id.clone(),
+            &previous_token.approved_account_ids,
         );
     }
 
@@ -98,6 +115,8 @@ impl NonFungibleTokenCore for Contract {
         &mut self,
         receiver_id: ValidAccountId,
         token_id: TokenId,
+        //we introduce an approval ID so that people with that approval ID can transfer the token
+        approval_id: u64,
         memo: Option<String>,
         msg: String,
     ) -> Promise {
@@ -111,6 +130,7 @@ impl NonFungibleTokenCore for Contract {
             &sender_id,
             receiver_id.as_ref(),
             &token_id,
+            Some(approval_id),
             memo,
         );
 
@@ -129,6 +149,7 @@ impl NonFungibleTokenCore for Contract {
             previous_token.owner_id,
             receiver_id.into(),
             token_id,
+            previous_token.approved_account_ids,
             &env::current_account_id(), //contract account to make the call to
             NO_DEPOSIT, //attached deposit
             GAS_FOR_RESOLVE_TRANSFER, //GAS attached to the call
@@ -146,6 +167,7 @@ impl NonFungibleTokenCore for Contract {
                 token_id,
                 owner_id: token.owner_id,
                 metadata,
+                approved_account_ids: token.approved_account_ids,
             })
         } else { //if there wasn't a token ID in the tokens_by_id collection, we return None
             None
@@ -163,6 +185,8 @@ impl NonFungibleTokenResolver for Contract {
         owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
+        //we introduce the approval map so we can keep track of what the approvals were before the transfer
+        approved_account_ids: HashMap<AccountId, u64>,
     ) -> bool {
         // Whether receiver wants to return token back to the sender, based on `nft_on_transfer`
         // call result.
@@ -175,6 +199,8 @@ impl NonFungibleTokenResolver for Contract {
                         since we've already transferred the token and nft_on_transfer returned false, we don't have to 
                         revert the original transfer and thus we can just return true since nothing went wrong.
                     */
+                    //we refund the owner for releasing the storage used up by the approved account IDs
+                    refund_approved_account_ids(owner_id, &approved_account_ids);
                     return true;
                 }
             }
@@ -183,12 +209,16 @@ impl NonFungibleTokenResolver for Contract {
         //get the token object if there is some token object
         let mut token = if let Some(token) = self.tokens_by_id.get(&token_id) {
             if token.owner_id != receiver_id {
+                //we refund the owner for releasing the storage used up by the approved account IDs
+                refund_approved_account_ids(owner_id, &approved_account_ids);
                 // The token is not owner by the receiver anymore. Can't return it.
                 return true;
             }
             token
         //if there isn't a token object, it was burned and so we return true
         } else {
+            //we refund the owner for releasing the storage used up by the approved account IDs
+            refund_approved_account_ids(owner_id, &approved_account_ids);
             return true;
         };
 
@@ -202,6 +232,12 @@ impl NonFungibleTokenResolver for Contract {
         
         //we change the token struct's owner to be the original owner 
         token.owner_id = owner_id;
+
+        //we refund the receiver any approved account IDs that they may have set on the token
+        refund_approved_account_ids(receiver_id, &token.approved_account_ids);
+        //reset the approved account IDs to what they were before the transfer
+        token.approved_account_ids = approved_account_ids;
+
         //we inset the token back into the tokens_by_id collection
         self.tokens_by_id.insert(&token_id, &token);
 
