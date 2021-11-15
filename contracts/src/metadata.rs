@@ -33,27 +33,34 @@ pub struct TokenMetadata {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct Token {
+    //owner of the token
     pub owner_id: AccountId,
+    //list of approved account IDs that have access to transfer the token. This maps an account ID to an approval ID
     pub approved_account_ids: HashMap<AccountId, u64>,
+    //the next approval ID to give out. 
     pub next_approval_id: u64,
-    
-    // CUSTOM - fields
+    //keep track of the royalty percentages for the token in a hash map
     pub royalty: HashMap<AccountId, u32>,
 }
 
+//The Json token is what will be returned from view calls. 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonToken {
+    //token ID
     pub token_id: TokenId,
+    //owner of the token
     pub owner_id: AccountId,
+    //token metadata
     pub metadata: TokenMetadata,
+    //list of approved account IDs that have access to transfer the token. This maps an account ID to an approval ID
     pub approved_account_ids: HashMap<AccountId, u64>,
-
-    // CUSTOM - fields
+    //keep track of the royalty percentages for the token in a hash map
     pub royalty: HashMap<AccountId, u32>,
 }
 
 pub trait NonFungibleTokenMetadata {
+    //view call for returning the contract metadata
     fn nft_metadata(&self) -> NFTMetadata;
 }
 
