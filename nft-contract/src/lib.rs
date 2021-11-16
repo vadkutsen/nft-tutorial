@@ -22,10 +22,6 @@ mod mint;
 mod nft_core; 
 mod royalty; 
 
-// CUSTOM types
-pub const CONTRACT_ROYALTY_CAP: u32 = 1000;
-pub const MINTER_ROYALTY_CAP: u32 = 2000;
-
 near_sdk::setup_alloc!();
 
 #[near_bindgen]
