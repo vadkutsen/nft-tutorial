@@ -58,6 +58,7 @@ impl NonFungibleTokenCore for Contract {
 		payout
 	}
 
+    //transfers the token to the receiver ID and returns the payout object that should be payed given the passed in balance. 
     #[payable]
     fn nft_transfer_payout(
         &mut self,
