@@ -57,7 +57,11 @@ trait NonFungibleTokenResolver {
     );
 }
 
-//I'm not ENTIRELY sure what the point of this is if we defined the trait above? 
+/*
+    resolves the promise of the cross contract call to the receiver contract
+    this is stored on THIS contract and is meant to analyze what happened in the cross contract call when nft_on_transfer was called
+    as part of the nft_transfer_call method
+*/ 
 trait NonFungibleTokenResolver {
     fn nft_resolve_transfer(
         &mut self,
