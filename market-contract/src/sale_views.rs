@@ -2,7 +2,6 @@ use crate::*;
 
 #[near_bindgen]
 impl Contract {
-
     /// views
     
     //returns the number of sales the marketplace has up (as a string)
@@ -33,33 +32,34 @@ impl Contract {
     pub fn get_sales_by_owner_id(
         &self,
         account_id: AccountId,
-        from_index: U64,
-        limit: u64,
+        from_index: Option<U128>,
+        limit: Option<u64>,
     ) -> Vec<Sale> {
-        //temporary vector to hold sales
-        let mut tmp = vec![];
-        
-        //get the set of sales for the given account ID
+        //get the set of token IDs for sale for the given account ID
         let by_owner_id = self.by_owner_id.get(&account_id);
-        //if there was some set, we set the sales object to that set. If there wasn't, sales is set to an empty vector
+        //if there was some set, we set the sales variable equal to that set. If there wasn't, sales is set to an empty vector
         let sales = if let Some(by_owner_id) = by_owner_id {
             by_owner_id
         } else {
             return vec![];
         };
         
-        //get all the keys in the vector
+        //we'll convert the UnorderedSet into a vector of strings
         let keys = sales.as_vector();
-        //the starting index is a u64 based on the passed in from_index
-        let start = u64::from(from_index);
-        //the ending index is the result of whatever is smaller: start + limit or the end of the sales vector
-        let end = min(start + limit, sales.len());
+
+        //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
+        let start = u128::from(from_index.unwrap_or(U128(0)));
         
-        //iterate through the sales vector and push to the tmp vector so we can return it
-        for i in start..end {
-            tmp.push(self.sales.get(&keys.get(i).unwrap()).unwrap());
-        }
-        tmp
+        //iterate through the keys vector
+        keys.iter()
+            //skip to the index we specified in the start variable
+            .skip(start as usize) 
+            //take the first "limit" elements in the vector. If we didn't specify a limit, use 0
+            .take(limit.unwrap_or(0) as usize) 
+            //we'll map the token IDs which are strings into Sale objects
+            .map(|token_id| self.sales.get(&token_id).unwrap())
+            //since we turned the keys into an iterator, we need to turn it back into a vector to return
+            .collect()
     }
 
     //get the number of sales for an nft contract. (returns a string)
@@ -82,24 +82,35 @@ impl Contract {
     pub fn get_sales_by_nft_contract_id(
         &self,
         nft_contract_id: AccountId,
-        from_index: U64,
-        limit: u64,
+        from_index: Option<U128>,
+        limit: Option<u64>,
     ) -> Vec<Sale> {
-
-        let mut tmp = vec![];
+        //get the set of token IDs for sale for the given contract ID
         let by_nft_contract_id = self.by_nft_contract_id.get(&nft_contract_id);
+        
+        //if there was some set, we set the sales variable equal to that set. If there wasn't, sales is set to an empty vector
         let sales = if let Some(by_nft_contract_id) = by_nft_contract_id {
             by_nft_contract_id
         } else {
             return vec![];
         };
+
+        //we'll convert the UnorderedSet into a vector of strings
         let keys = sales.as_vector();
-        let start = u64::from(from_index);
-        let end = min(start + limit, sales.len());
-        for i in start..end {
-            tmp.push(self.sales.get(&format!("{}{}{}", &nft_contract_id, DELIMETER, &keys.get(i).unwrap())).unwrap());
-        }
-        tmp
+
+        //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
+        let start = u128::from(from_index.unwrap_or(U128(0)));
+        
+        //iterate through the keys vector
+        keys.iter()
+            //skip to the index we specified in the start variable
+            .skip(start as usize) 
+            //take the first "limit" elements in the vector. If we didn't specify a limit, use 0
+            .take(limit.unwrap_or(0) as usize) 
+            //we'll map the token IDs which are strings into Sale objects by passing in the unique sale ID (contract + DELIMITER + token ID)
+            .map(|token_id| self.sales.get(&format!("{}{}{}", nft_contract_id, DELIMETER, token_id)).unwrap())
+            //since we turned the keys into an iterator, we need to turn it back into a vector to return
+            .collect()
     }
 
     //get a sale information for a given unique sale ID (contract + DELIMITER + token ID)
@@ -108,5 +119,4 @@ impl Contract {
         //we're not guaranteed that the unique sale ID passed in will be valid.
         self.sales.get(&nft_contract_token)
     }
-    
 }
