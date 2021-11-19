@@ -6,7 +6,6 @@ use near_sdk::{
     assert_one_yocto, env, ext_contract, near_bindgen, AccountId, Balance, Gas, PanicOnDefault,
     Promise, CryptoHash, BorshStorageKey,
 };
-use std::cmp::min;
 use std::collections::HashMap;
 
 use crate::external::*;
